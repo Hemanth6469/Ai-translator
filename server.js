@@ -36,20 +36,23 @@ async function freeTranslateFallback(text, sourceLang, targetLang) {
       const data = await response.json();
       if (Array.isArray(data) && Array.isArray(data[0])) {
         const translatedParts = [];
-        let phoneticSpelling = null;
+        let targetPhonetic = null;
+        let sourcePhonetic = null;
         for (let i = 0; i < data[0].length; i++) {
           const item = data[0][i];
           if (item && item[0]) {
             translatedParts.push(item[0]);
           }
-          if (item && !item[0] && (item[2] || item[3])) {
-            phoneticSpelling = item[2] || item[3];
+          if (item && !item[0]) {
+            if (item[2]) targetPhonetic = item[2];
+            if (item[3]) sourcePhonetic = item[3];
           }
         }
-        if (!phoneticSpelling && data[0].length > 0) {
+        if ((!targetPhonetic || !sourcePhonetic) && data[0].length > 0) {
           const last = data[0][data[0].length - 1];
-          if (last && (last[2] || last[3])) {
-            phoneticSpelling = last[2] || last[3];
+          if (last) {
+            targetPhonetic = targetPhonetic || last[2] || null;
+            sourcePhonetic = sourcePhonetic || last[3] || null;
           }
         }
 
@@ -59,7 +62,9 @@ async function freeTranslateFallback(text, sourceLang, targetLang) {
           return {
             translatedText,
             detectedSource,
-            phoneticSpelling: typeof phoneticSpelling === 'string' ? phoneticSpelling.trim() : null,
+            targetPhonetic: typeof targetPhonetic === 'string' ? targetPhonetic.trim() : null,
+            sourcePhonetic: typeof sourcePhonetic === 'string' ? sourcePhonetic.trim() : null,
+            phoneticSpelling: typeof targetPhonetic === 'string' ? targetPhonetic.trim() : null,
             provider: 'Universal High-Speed Engine'
           };
         }

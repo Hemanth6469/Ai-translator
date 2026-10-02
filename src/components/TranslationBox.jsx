@@ -25,14 +25,15 @@ export default function TranslationBox({
   onToggleFavorite,
   provider,
   detectedSource,
-  phoneticSpelling = null,
+  sourcePhonetic = null,
+  targetPhonetic = null,
   onOpenHistory,
   onOpenSaved,
   historyCount = 0,
   savedCount = 0
 }) {
   const [activeMediaTab, setActiveMediaTab] = useState('text'); // 'text' | 'images' | 'documents' | 'websites'
-  const [showSpelling, setShowSpelling] = useState(true);
+  const [showSpelling, setShowSpelling] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingSource, setIsSpeakingSource] = useState(false);
@@ -204,17 +205,18 @@ export default function TranslationBox({
   ];
 
   const targetPresets = [
-    { code: 'el', label: 'Greek' },
+    { code: 'te', label: 'Telugu' },
     { code: 'es', label: 'Spanish' },
-    { code: 'ar', label: 'Arabic' },
-    { code: 'ms', label: 'Malay' }
+    { code: 'el', label: 'Greek' },
+    { code: 'ar', label: 'Arabic' }
   ];
 
   // Romanization transliteration & Spelling Breakdowns
-  const romanized = getTransliteration(translatedText, targetLang, phoneticSpelling);
+  const targetPhoneticDisplay = targetPhonetic || getTransliteration(translatedText, targetLang);
+  const sourcePhoneticDisplay = sourcePhonetic;
   const syllableBreakdown = getSyllableBreakdown(translatedText);
   const letterSpelling = getLetterSpelling(translatedText);
-  const displaySpelling = romanized || syllableBreakdown;
+  const displaySpelling = targetPhoneticDisplay || syllableBreakdown;
 
   // File drop handler for Images & Documents
   const handleDrop = (e) => {
@@ -434,8 +436,8 @@ export default function TranslationBox({
                 </div>
               )}
 
-              {/* Textarea */}
-              <div className="flex-1 p-5 pr-12">
+              {/* Textarea & Source Phonetics */}
+              <div className="flex-1 p-5 pr-12 flex flex-col justify-start">
                 <textarea
                   value={sourceText}
                   onChange={(e) => setSourceText(e.target.value)}
@@ -446,8 +448,16 @@ export default function TranslationBox({
                     }
                   }}
                   placeholder="[Enter text or phrase]"
-                  className="w-full h-full resize-none bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-lg sm:text-xl leading-relaxed focus:outline-none"
+                  className="w-full resize-none bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xl sm:text-2xl leading-relaxed focus:outline-none"
+                  rows={sourcePhoneticDisplay ? 2 : 4}
                 />
+
+                {/* Source Phonetic Transliteration (e.g. "hī") */}
+                {sourcePhoneticDisplay && (
+                  <div className="text-sm font-normal text-slate-400 dark:text-slate-500 tracking-wide font-sans select-text mt-1">
+                    {sourcePhoneticDisplay}
+                  </div>
+                )}
               </div>
 
               {/* Bottom Action Bar */}
@@ -521,14 +531,14 @@ export default function TranslationBox({
                   </div>
                 ) : translatedText ? (
                   <div className="space-y-3 select-text">
-                    <div className="text-slate-900 dark:text-slate-100 text-lg sm:text-xl leading-relaxed font-normal whitespace-pre-wrap">
+                    <div className="text-slate-900 dark:text-slate-100 text-xl sm:text-2xl leading-relaxed font-normal whitespace-pre-wrap">
                       {translatedText}
                     </div>
 
                     {/* Transliteration Romanization (Pronunciation) */}
                     {displaySpelling && (
                       <div className="text-sm font-normal text-slate-500 dark:text-slate-400 tracking-wide font-sans">
-                        [{displaySpelling}]
+                        {displaySpelling}
                       </div>
                     )}
 

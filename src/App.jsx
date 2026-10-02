@@ -37,7 +37,8 @@ export default function App() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [detectedSource, setDetectedSource] = useState('en');
   const [provider, setProvider] = useState('Universal High-Speed Engine');
-  const [phoneticSpelling, setPhoneticSpelling] = useState(null);
+  const [sourcePhonetic, setSourcePhonetic] = useState(null);
+  const [targetPhonetic, setTargetPhonetic] = useState(null);
 
   // Preferences & API Key
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('translator_gemini_key') || localStorage.getItem('omnilingo_gemini_key') || '');
@@ -83,7 +84,8 @@ export default function App() {
       });
 
       setTranslatedText(result.translatedText);
-      setPhoneticSpelling(result.phoneticSpelling || null);
+      setSourcePhonetic(result.sourcePhonetic || null);
+      setTargetPhonetic(result.targetPhonetic || result.phoneticSpelling || null);
       if (result.detectedSource) {
         setDetectedSource(result.detectedSource);
       }
@@ -115,7 +117,8 @@ export default function App() {
   useEffect(() => {
     if (!sourceText.trim()) {
       setTranslatedText('');
-      setPhoneticSpelling(null);
+      setSourcePhonetic(null);
+      setTargetPhonetic(null);
       return;
     }
     if (!autoTranslate) return;
@@ -230,7 +233,8 @@ export default function App() {
               onToggleFavorite={handleToggleFavorite}
               provider={provider}
               detectedSource={detectedSource}
-              phoneticSpelling={phoneticSpelling}
+              sourcePhonetic={sourcePhonetic}
+              targetPhonetic={targetPhonetic}
               onOpenHistory={() => {
                 setHistoryStarredOnly(false);
                 setActiveTab('history');
