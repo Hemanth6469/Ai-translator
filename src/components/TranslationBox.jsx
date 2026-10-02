@@ -5,7 +5,7 @@ import {
   Edit3, Image as ImageIcon, FileText, Globe, Sparkles, Loader2, X
 } from 'lucide-react';
 import { getLanguageByCode } from '../data/languages';
-import { getTransliteration } from '../utils/transliterate';
+import { getTransliteration, getSyllableBreakdown, getLetterSpelling } from '../utils/transliterate';
 
 export default function TranslationBox({
   sourceText,
@@ -25,12 +25,14 @@ export default function TranslationBox({
   onToggleFavorite,
   provider,
   detectedSource,
+  phoneticSpelling = null,
   onOpenHistory,
   onOpenSaved,
   historyCount = 0,
   savedCount = 0
 }) {
   const [activeMediaTab, setActiveMediaTab] = useState('text'); // 'text' | 'images' | 'documents' | 'websites'
+  const [showSpelling, setShowSpelling] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingSource, setIsSpeakingSource] = useState(false);
@@ -118,6 +120,39 @@ export default function TranslationBox({
     window.speechSynthesis.speak(utterance);
   };
 
+  // Speak slowly (syllable pace)
+  const speakSlowly = (text, langCode) => {
+    if (!window.speechSynthesis || !text || !text.trim()) return;
+    window.speechSynthesis.cancel();
+    const langObj = getLanguageByCode(langCode);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langObj?.speechCode || 'en-US';
+    utterance.rate = 0.55;
+    const voices = window.speechSynthesis.getVoices();
+    const targetVoice = voices.find(v => v.lang.startsWith((utterance.lang || '').slice(0, 2)));
+    if (targetVoice) utterance.voice = targetVoice;
+    setIsSpeakingTarget(true);
+    utterance.onend = () => setIsSpeakingTarget(false);
+    utterance.onerror = () => setIsSpeakingTarget(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Spell out letter-by-letter
+  const spellLettersAloud = (text, langCode) => {
+    if (!window.speechSynthesis || !text || !text.trim()) return;
+    window.speechSynthesis.cancel();
+    const langObj = getLanguageByCode(langCode);
+    const words = text.trim().split(/\s+/).slice(0, 3);
+    const lettersSpaced = words.map(w => w.replace(/[^\p{L}\p{N}]/gu, '').split('').join('  ')).join(' ... ');
+    const utterance = new SpeechSynthesisUtterance(lettersSpaced);
+    utterance.lang = langObj?.speechCode || 'en-US';
+    utterance.rate = 0.65;
+    setIsSpeakingTarget(true);
+    utterance.onend = () => setIsSpeakingTarget(false);
+    utterance.onerror = () => setIsSpeakingTarget(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const copyToClipboard = (text) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -175,8 +210,11 @@ export default function TranslationBox({
     { code: 'ms', label: 'Malay' }
   ];
 
-  // Romanization transliteration
-  const romanized = getTransliteration(translatedText, targetLang);
+  // Romanization transliteration & Spelling Breakdowns
+  const romanized = getTransliteration(translatedText, targetLang, phoneticSpelling);
+  const syllableBreakdown = getSyllableBreakdown(translatedText);
+  const letterSpelling = getLetterSpelling(translatedText);
+  const displaySpelling = romanized || syllableBreakdown;
 
   // File drop handler for Images & Documents
   const handleDrop = (e) => {
@@ -482,15 +520,68 @@ export default function TranslationBox({
                     <span className="text-xs font-medium">Translating...</span>
                   </div>
                 ) : translatedText ? (
-                  <div className="space-y-2 select-text">
+                  <div className="space-y-3 select-text">
                     <div className="text-slate-900 dark:text-slate-100 text-lg sm:text-xl leading-relaxed font-normal whitespace-pre-wrap">
                       {translatedText}
                     </div>
 
                     {/* Transliteration Romanization (Pronunciation) */}
-                    {romanized && (
+                    {displaySpelling && (
                       <div className="text-sm font-normal text-slate-500 dark:text-slate-400 tracking-wide font-sans">
-                        [{romanized}]
+                        [{displaySpelling}]
+                      </div>
+                    )}
+
+                    {/* Interactive "How to spell" Guide */}
+                    {translatedText.trim() && (
+                      <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80">
+                        <div className="flex items-center justify-between mb-2">
+                          <button
+                            onClick={() => setShowSpelling(!showSpelling)}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-[#1a73e8] dark:text-blue-400 hover:underline"
+                          >
+                            <span className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[10px] font-mono border border-blue-200/60 dark:border-blue-800/60 font-bold">ABC</span>
+                            <span>{showSpelling ? 'Hide spelling guide' : 'How to spell'}</span>
+                          </button>
+
+                          {showSpelling && (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => speakSlowly(translatedText, targetLang)}
+                                title="Pronounce slowly"
+                                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1 transition-colors"
+                              >
+                                <span>🐢</span>
+                                <span>Slow</span>
+                              </button>
+                              <button
+                                onClick={() => spellLettersAloud(translatedText, targetLang)}
+                                title="Spell letters aloud"
+                                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1 transition-colors"
+                              >
+                                <span>🔤</span>
+                                <span>Spell letters</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {showSpelling && (
+                          <div className="bg-white/90 dark:bg-slate-900/80 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 text-xs space-y-2 shadow-sm animate-fade-in">
+                            <div>
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider block mb-0.5">Syllables (Sound it out):</span>
+                              <span className="font-medium text-slate-800 dark:text-slate-200 text-sm tracking-wide">
+                                {syllableBreakdown || translatedText}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider block mb-0.5">Letter-by-Letter Spelling:</span>
+                              <span className="font-mono text-slate-700 dark:text-slate-300 text-xs tracking-wider">
+                                {letterSpelling || translatedText}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

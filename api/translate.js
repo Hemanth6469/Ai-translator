@@ -5,7 +5,7 @@ async function freeTranslateFallback(text, sourceLang, targetLang) {
   const tLang = targetLang || 'en';
 
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sLang)}&tl=${encodeURIComponent(tLang)}&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sLang)}&tl=${encodeURIComponent(tLang)}&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -15,13 +15,31 @@ async function freeTranslateFallback(text, sourceLang, targetLang) {
     if (response.ok) {
       const data = await response.json();
       if (Array.isArray(data) && Array.isArray(data[0])) {
-        const translatedParts = data[0].map(item => item[0]).filter(Boolean);
+        const translatedParts = [];
+        let phoneticSpelling = null;
+        for (let i = 0; i < data[0].length; i++) {
+          const item = data[0][i];
+          if (item && item[0]) {
+            translatedParts.push(item[0]);
+          }
+          if (item && !item[0] && (item[2] || item[3])) {
+            phoneticSpelling = item[2] || item[3];
+          }
+        }
+        if (!phoneticSpelling && data[0].length > 0) {
+          const last = data[0][data[0].length - 1];
+          if (last && (last[2] || last[3])) {
+            phoneticSpelling = last[2] || last[3];
+          }
+        }
+
         const translatedText = translatedParts.join('');
         const detectedSource = data[2] || (sLang === 'auto' ? 'en' : sLang);
         if (translatedText.trim()) {
           return {
             translatedText,
             detectedSource,
+            phoneticSpelling: typeof phoneticSpelling === 'string' ? phoneticSpelling.trim() : null,
             provider: 'Universal High-Speed Engine'
           };
         }

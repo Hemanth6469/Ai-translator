@@ -1,4 +1,4 @@
-// Transliteration / Romanization utility for non-Latin scripts (Greek, Cyrillic, etc.)
+// Transliteration & Spelling utility for pronunciations, syllables, and letter-by-letter spelling
 
 const greekMap = {
   'α': 'a', 'ά': 'á', 'β': 'v', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'έ': 'é',
@@ -18,13 +18,45 @@ const cyrillicMap = {
   'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
   'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts',
   'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Δ': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh',
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh',
   'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O',
   'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts',
   'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
 };
 
-export function getTransliteration(text, targetLang) {
+// Syllable splitter for words
+export function getSyllableBreakdown(text) {
+  if (!text || typeof text !== 'string') return '';
+  const words = text.trim().split(/\s+/);
+  
+  return words.map(word => {
+    const clean = word.replace(/[^\p{L}\p{N}]/gu, '');
+    if (!clean) return word;
+    if (clean.length <= 3) return clean;
+    
+    // Pattern to match vowel-centered syllables
+    const matches = clean.match(/[^aeiouyáéíóúàèùâêîôûäöü]*[aeiouyáéíóúàèùâêîôûäöü]+(?:[^aeiouyáéíóúàèùâêîôûäöü]+(?=$|[^aeiouyáéíóúàèùâêîôûäöü]))?/gi);
+    return matches && matches.length > 1 ? matches.join(' · ') : clean;
+  }).join('   ');
+}
+
+// Letter-by-letter spelling breakdown (e.g. H - E - L - L - O)
+export function getLetterSpelling(text) {
+  if (!text || typeof text !== 'string') return '';
+  const words = text.trim().split(/\s+/).slice(0, 8); // limit for clarity
+  
+  return words.map(word => {
+    const letters = word.replace(/[^\p{L}\p{N}]/gu, '').split('');
+    return letters.map(l => l.toUpperCase()).join(' · ');
+  }).filter(Boolean).join('   |   ');
+}
+
+// Romanization / Phonetic Transliteration
+export function getTransliteration(text, targetLang, remotePhonetic = null) {
+  if (remotePhonetic && typeof remotePhonetic === 'string' && remotePhonetic.trim()) {
+    return remotePhonetic.trim();
+  }
+
   if (!text || typeof text !== 'string') return null;
 
   // Greek

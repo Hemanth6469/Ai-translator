@@ -33,18 +33,36 @@ export async function translateText({ text, sourceLang = 'auto', targetLang = 'e
   // 2. Direct browser fallback using Google GTX
   try {
     const sl = (sourceLang === 'auto') ? 'auto' : sourceLang;
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(targetLang)}&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && Array.isArray(data[0])) {
-        const translatedParts = data[0].map(item => item[0]).filter(Boolean);
+        const translatedParts = [];
+        let phoneticSpelling = null;
+        for (let i = 0; i < data[0].length; i++) {
+          const item = data[0][i];
+          if (item && item[0]) {
+            translatedParts.push(item[0]);
+          }
+          if (item && !item[0] && (item[2] || item[3])) {
+            phoneticSpelling = item[2] || item[3];
+          }
+        }
+        if (!phoneticSpelling && data[0].length > 0) {
+          const last = data[0][data[0].length - 1];
+          if (last && (last[2] || last[3])) {
+            phoneticSpelling = last[2] || last[3];
+          }
+        }
+
         const translatedText = translatedParts.join('');
         const detectedSource = data[2] || (sourceLang === 'auto' ? 'en' : sourceLang);
         return {
           success: true,
           translatedText,
           detectedSource,
+          phoneticSpelling: typeof phoneticSpelling === 'string' ? phoneticSpelling.trim() : null,
           provider: 'High-Speed Web Engine (Direct)'
         };
       }
