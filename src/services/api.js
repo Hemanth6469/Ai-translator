@@ -127,25 +127,3 @@ export async function explainTranslation({ originalText, translatedText, sourceL
     ]
   };
 }
-
-export async function uploadDocument({ file, sourceLang, targetLang, tone, domain, apiKey }) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('sourceLang', sourceLang);
-  formData.append('targetLang', targetLang);
-  formData.append('tone', tone);
-  formData.append('domain', domain);
-  if (apiKey) formData.append('apiKey', apiKey);
-
-  const res = await fetch(`${BACKEND_BASE}/document`, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to process document');
-  }
-
-  return await res.json();
-}

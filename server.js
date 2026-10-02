@@ -1,11 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import multer from 'multer';
-import pdfParse from 'pdf-parse/lib/pdf-parse.js';
-import mammoth from 'mammoth';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,21 +15,15 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
-
-// Multer memory storage for document uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 } // 25MB max
-});
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Helper: Free fallback translation via Google Web RPC & MyMemory API
 async function freeTranslateFallback(text, sourceLang, targetLang) {
   const sLang = (!sourceLang || sourceLang === 'auto') ? 'auto' : sourceLang;
   const tLang = targetLang || 'en';
 
-  // Strategy 1: Google Translate GTX endpoint (fast, supports 100+ languages)
+  // Strategy 1: Google Translate GTX endpoint (fast, supports 80+ languages)
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sLang)}&tl=${encodeURIComponent(tLang)}&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url, {
@@ -123,7 +113,7 @@ Domain Context: ${domain} (${domainGuidelines[domain] || domainGuidelines.genera
 Rules:
 1. Translate accurately while adapting naturally to cultural context and the requested tone.
 2. If code, formatting, or placeholders (like {name}, {{var}}, [link](url)) are present, preserve them exactly.
-3. Return ONLY the translation. Do NOT include markdown fences, introductory greetings, or meta commentary unless explicitly requested.
+3. Return ONLY the translation. Do NOT include markdown fences, introductory greetings, or meta commentary.
 
 Source Text:
 ${text}`;
@@ -160,7 +150,7 @@ app.post('/api/translate', async (req, res) => {
     const trimmed = text.trim();
     const effectiveKey = apiKey || process.env.GEMINI_API_KEY;
 
-    // If Gemini key is available AND either tone/domain requires AI or explicit key provided
+    // If Gemini key is available
     if (effectiveKey) {
       try {
         const result = await geminiTranslate(trimmed, sourceLang, targetLang, tone, domain, effectiveKey);
@@ -172,7 +162,6 @@ app.post('/api/translate', async (req, res) => {
         });
       } catch (geminiError) {
         console.warn('Gemini translation encountered an error, falling back to free engine:', geminiError.message);
-        // Fallback gracefully below
       }
     }
 
@@ -275,76 +264,6 @@ Return a clean JSON object with this exact structure (no markdown fences, just p
   } catch (error) {
     console.error('Explain error:', error);
     res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 4. Document Parsing & Translation
-app.post('/api/document', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const { sourceLang = 'auto', targetLang = 'es', tone = 'standard', domain = 'general', apiKey } = req.body;
-    const file = req.file;
-    const originalName = file.originalname;
-    const ext = originalName.split('.').pop().toLowerCase();
-
-    let extractedText = '';
-
-    if (ext === 'txt' || ext === 'md' || ext === 'json' || ext === 'csv') {
-      extractedText = file.buffer.toString('utf-8');
-    } else if (ext === 'pdf') {
-      const pdfData = await pdfParse(file.buffer);
-      extractedText = pdfData.text;
-    } else if (ext === 'docx') {
-      const docxData = await mammoth.extractRawText({ buffer: file.buffer });
-      extractedText = docxData.value;
-    } else {
-      return res.status(400).json({ error: `Unsupported file type: .${ext}. Supported formats: .txt, .md, .pdf, .docx, .json, .csv` });
-    }
-
-    if (!extractedText.trim()) {
-      return res.status(400).json({ error: 'The uploaded document contains no readable text.' });
-    }
-
-    // Split text into reasonable chunks (paragraphs) to avoid payload limits
-    const paragraphs = extractedText.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-    const maxParagraphs = 30; // Protect against giant documents crashing
-    const selectedParagraphs = paragraphs.slice(0, maxParagraphs);
-
-    const translatedParagraphs = [];
-    const effectiveKey = apiKey || process.env.GEMINI_API_KEY;
-
-    for (const paragraph of selectedParagraphs) {
-      if (effectiveKey) {
-        try {
-          const resAI = await geminiTranslate(paragraph.slice(0, 2000), sourceLang, targetLang, tone, domain, effectiveKey);
-          translatedParagraphs.push(resAI.translatedText);
-          continue;
-        } catch (e) {
-          // fallback
-        }
-      }
-      const resFree = await freeTranslateFallback(paragraph.slice(0, 1500), sourceLang, targetLang);
-      translatedParagraphs.push(resFree.translatedText);
-    }
-
-    const translatedFull = translatedParagraphs.join('\n\n');
-    const wordCount = extractedText.split(/\s+/).filter(Boolean).length;
-
-    res.json({
-      success: true,
-      fileName: originalName,
-      fileType: ext,
-      wordCount,
-      paragraphCount: selectedParagraphs.length,
-      originalText: extractedText,
-      translatedText: translatedFull
-    });
-  } catch (error) {
-    console.error('Document error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Document processing failed' });
   }
 });
 

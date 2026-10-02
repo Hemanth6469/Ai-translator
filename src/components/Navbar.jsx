@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
-  Globe2, Moon, Sun, Settings, Sparkles, MessageSquare, 
-  FileText, Image as ImageIcon, Scale, BookOpen, Layers
+  Globe2, Moon, Sun, Settings, Image as ImageIcon, History as HistoryIcon 
 } from 'lucide-react';
 
 export default function Navbar({
@@ -14,11 +13,8 @@ export default function Navbar({
 }) {
   const navItems = [
     { id: 'translate', label: 'Translator', icon: Globe2 },
-    { id: 'conversation', label: 'Live Conversation', icon: MessageSquare },
-    { id: 'document', label: 'Documents', icon: FileText },
     { id: 'image', label: 'Image OCR', icon: ImageIcon },
-    { id: 'compare', label: 'Compare Tones', icon: Scale },
-    { id: 'history', label: 'History & Vocab', icon: BookOpen },
+    { id: 'history', label: 'History', icon: HistoryIcon },
   ];
 
   return (

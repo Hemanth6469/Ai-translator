@@ -4,11 +4,8 @@ import Navbar from './components/Navbar';
 import TranslationBox from './components/TranslationBox';
 import LanguageSelectorModal from './components/LanguageSelectorModal';
 import AiInsightsPanel from './components/AiInsightsPanel';
-import ConversationMode from './components/ConversationMode';
-import DocumentTranslator from './components/DocumentTranslator';
 import ImageTranslator from './components/ImageTranslator';
-import ComparisonMode from './components/ComparisonMode';
-import HistoryAndVocab from './components/HistoryAndVocab';
+import History from './components/History';
 import SettingsModal from './components/SettingsModal';
 import { translateText, explainTranslation } from './services/api';
 import { getLanguageByCode } from './data/languages';
@@ -30,7 +27,7 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Tab navigation state
+  // Tab navigation state: only 'translate' | 'image' | 'history'
   const [activeTab, setActiveTab] = useState('translate');
 
   // Translation core state
@@ -59,7 +56,7 @@ export default function App() {
   const [analysis, setAnalysis] = useState(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
 
-  // History & Vocabulary Persistence
+  // History Persistence
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('translator_history') || localStorage.getItem('omnilingo_history');
@@ -69,25 +66,9 @@ export default function App() {
     }
   });
 
-  const [vocabulary, setVocabulary] = useState(() => {
-    try {
-      const saved = localStorage.getItem('translator_vocab') || localStorage.getItem('omnilingo_vocab');
-      return saved ? JSON.parse(saved) : [
-        { word: 'futuro', meaning: 'future', pos: 'noun', note: 'Essential vocabulary term' },
-        { word: 'sueños', meaning: 'dreams', pos: 'noun', note: 'Plural form of sueño' }
-      ];
-    } catch {
-      return [];
-    }
-  });
-
   useEffect(() => {
     localStorage.setItem('translator_history', JSON.stringify(history));
   }, [history]);
-
-  useEffect(() => {
-    localStorage.setItem('translator_vocab', JSON.stringify(vocabulary));
-  }, [vocabulary]);
 
   // Execute translation
   const handleTranslate = useCallback(async () => {
@@ -190,23 +171,13 @@ export default function App() {
     }
   };
 
-  // Add word to flashcards
-  const handleSaveWord = (wordObj) => {
-    setVocabulary(prev => {
-      if (prev.some(w => w.word.toLowerCase() === wordObj.word.toLowerCase())) return prev;
-      return [wordObj, ...prev];
-    });
-    confetti({
-      particleCount: 30,
-      spread: 45,
-      origin: { y: 0.8 }
-    });
+  const handleToggleHistoryStar = (id) => {
+    setHistory(prev => prev.map(item => item.id === id ? { ...item, starred: !item.starred } : item));
   };
 
   const handleResetAll = () => {
     localStorage.clear();
     setHistory([]);
-    setVocabulary([]);
     setApiKey('');
     setAutoTranslate(false);
     setSpeechRate(1.0);
@@ -236,7 +207,7 @@ export default function App() {
                 Translate Any Language with Precision & AI Nuance
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Contextual translation, customizable tone, speech-to-text, and deep linguistic breakdowns.
+                Contextual translation, speech-to-text, and instant pronunciations.
               </p>
             </div>
 
@@ -266,23 +237,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Live Bilingual Conversation */}
-        {activeTab === 'conversation' && (
-          <ConversationMode apiKey={apiKey} />
-        )}
-
-        {/* Tab 3: Document Translator */}
-        {activeTab === 'document' && (
-          <DocumentTranslator
-            sourceLang={sourceLang}
-            targetLang={targetLang}
-            tone={tone}
-            domain={domain}
-            apiKey={apiKey}
-          />
-        )}
-
-        {/* Tab 4: Image OCR Translator */}
+        {/* Tab 2: Image OCR Translator */}
         {activeTab === 'image' && (
           <ImageTranslator
             targetLang={targetLang}
@@ -297,18 +252,9 @@ export default function App() {
           />
         )}
 
-        {/* Tab 5: Multi-Tone Compare */}
-        {activeTab === 'compare' && (
-          <ComparisonMode
-            sourceLang={sourceLang}
-            targetLang={targetLang}
-            apiKey={apiKey}
-          />
-        )}
-
-        {/* Tab 6: History & Vocabulary Bank */}
+        {/* Tab 3: History */}
         {activeTab === 'history' && (
-          <HistoryAndVocab
+          <History
             history={history}
             onClearHistory={() => setHistory([])}
             onDeleteHistoryItem={(id) => setHistory(prev => prev.filter(h => h.id !== id))}
@@ -321,9 +267,7 @@ export default function App() {
               if (item.domain) setDomain(item.domain);
               setActiveTab('translate');
             }}
-            vocabulary={vocabulary}
-            onDeleteWord={(index) => setVocabulary(prev => prev.filter((_, i) => i !== index))}
-            onClearVocab={() => setVocabulary([])}
+            onToggleStar={handleToggleHistoryStar}
           />
         )}
 
@@ -354,7 +298,7 @@ export default function App() {
         onClose={() => setIsInsightsOpen(false)}
         analysis={analysis}
         isLoading={isLoadingAnalysis}
-        onSaveWord={handleSaveWord}
+        onSaveWord={() => {}}
         onApplyAlternative={(newText) => setTranslatedText(newText)}
       />
 
@@ -374,7 +318,7 @@ export default function App() {
       {/* Footer */}
       <footer className="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© 2026 Translator — AI Translator Website</p>
+          <p>© 2026 Translator — AI Translator</p>
           <div className="flex items-center gap-4 text-slate-400">
             <span>Web Speech API</span>
             <span>•</span>
