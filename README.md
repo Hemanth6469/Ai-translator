@@ -1,8 +1,6 @@
 # 🌐 AI Translator — Clean, Fast, Multi-Language Translator
 
-**AI Translator** is an AI-powered translation web application built with **React 18**, **Vite**, **Tailwind CSS**, and **Express.js**.
-
-It provides context-aware translations across 80+ world languages, in-browser optical character recognition (OCR) for images, and local translation history.
+**AI Translator** is a focused, high-performance translation web application built with **React 18**, **Vite**, **Tailwind CSS**, and **Express.js**.
 
 ---
 
@@ -16,19 +14,13 @@ It provides context-aware translations across 80+ world languages, in-browser op
    - **AI Linguistic Insights**: Explains vocabulary meanings, grammar rules, cultural idioms, and alternative phrasings.
    - Keyboard shortcut: Press `Ctrl + Enter` to translate immediately.
 
-2. **📷 Image OCR Translation**:
-   - In-browser optical character recognition powered by **Tesseract.js**.
-   - Upload or drag-and-drop images (signs, menus, screenshots, book pages).
-   - Extracts text and translates directly with zero cloud upload of your images.
-   - 1-click "Edit in Main Translator" to continue working with the text.
-
-3. **🕒 Translation History**:
+2. **🕒 Translation History**:
    - Automatically saves translations locally with search and filtering.
    - Star favorite translations.
    - 1-click load back into the translator.
    - Export history to JSON.
 
-4. **🌓 Clean Modern Interface**:
+3. **🌓 Clean Modern Interface**:
    - Dark and Light mode toggle.
    - Fully responsive on desktop, tablet, and mobile.
 
@@ -93,11 +85,10 @@ translator/
 │   ├── services/
 │   │   └── api.js            # Translation client with auto-fallbacks
 │   └── components/
-│       ├── Navbar.jsx        # Header navigation (Translator, Image OCR, History)
+│       ├── Navbar.jsx        # Header navigation (Translator, History)
 │       ├── TranslationBox.jsx# Main dual-pane translation interface
 │       ├── LanguageSelectorModal.jsx # Searchable language picker
 │       ├── AiInsightsPanel.jsx       # Linguistic breakdown modal
-│       ├── ImageTranslator.jsx       # Client-side Tesseract OCR
 │       ├── History.jsx               # Translation history manager
 │       └── SettingsModal.jsx         # API keys & voice speed controls
 ```

@@ -4,7 +4,6 @@ import Navbar from './components/Navbar';
 import TranslationBox from './components/TranslationBox';
 import LanguageSelectorModal from './components/LanguageSelectorModal';
 import AiInsightsPanel from './components/AiInsightsPanel';
-import ImageTranslator from './components/ImageTranslator';
 import History from './components/History';
 import SettingsModal from './components/SettingsModal';
 import { translateText, explainTranslation } from './services/api';
@@ -237,22 +236,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Image OCR Translator */}
-        {activeTab === 'image' && (
-          <ImageTranslator
-            targetLang={targetLang}
-            tone={tone}
-            domain={domain}
-            apiKey={apiKey}
-            onSendToMain={(extracted, trans) => {
-              setSourceText(extracted);
-              setTranslatedText(trans);
-              setActiveTab('translate');
-            }}
-          />
-        )}
-
-        {/* Tab 3: History */}
+        {/* Tab 2: History */}
         {activeTab === 'history' && (
           <History
             history={history}
@@ -321,8 +305,6 @@ export default function App() {
           <p>© 2026 Translator — AI Translator</p>
           <div className="flex items-center gap-4 text-slate-400">
             <span>Web Speech API</span>
-            <span>•</span>
-            <span>Tesseract.js OCR</span>
             <span>•</span>
             <span>Gemini AI Ready</span>
           </div>

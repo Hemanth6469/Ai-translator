@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Globe2, Moon, Sun, Settings, Image as ImageIcon, History as HistoryIcon 
+  Globe2, Moon, Sun, Settings, History as HistoryIcon 
 } from 'lucide-react';
 
 export default function Navbar({
@@ -13,7 +13,6 @@ export default function Navbar({
 }) {
   const navItems = [
     { id: 'translate', label: 'Translator', icon: Globe2 },
-    { id: 'image', label: 'Image OCR', icon: ImageIcon },
     { id: 'history', label: 'History', icon: HistoryIcon },
   ];
 
