@@ -40,8 +40,9 @@ export default function App() {
 
   // Preferences & API Key
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('translator_gemini_key') || localStorage.getItem('omnilingo_gemini_key') || '');
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [autoTranslate, setAutoTranslate] = useState(true);
   const [speechRate, setSpeechRate] = useState(1.0);
+  const [historyStarredOnly, setHistoryStarredOnly] = useState(false);
 
   // Modals state
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
@@ -110,12 +111,16 @@ export default function App() {
   // Auto-translate debounce
   const timerRef = useRef(null);
   useEffect(() => {
-    if (!autoTranslate || !sourceText.trim()) return;
+    if (!sourceText.trim()) {
+      setTranslatedText('');
+      return;
+    }
+    if (!autoTranslate) return;
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
       handleTranslate();
-    }, 700);
+    }, 450);
 
     return () => clearTimeout(timerRef.current);
   }, [sourceText, autoTranslate, handleTranslate]);
@@ -222,25 +227,48 @@ export default function App() {
               onToggleFavorite={handleToggleFavorite}
               provider={provider}
               detectedSource={detectedSource}
+              onOpenHistory={() => {
+                setHistoryStarredOnly(false);
+                setActiveTab('history');
+              }}
+              onOpenSaved={() => {
+                setHistoryStarredOnly(true);
+                setActiveTab('history');
+              }}
+              historyCount={history.length}
+              savedCount={history.filter(h => h.starred).length}
             />
           </div>
         )}
 
         {/* Tab 2: History */}
         {activeTab === 'history' && (
-          <History
-            history={history}
-            onClearHistory={() => setHistory([])}
-            onDeleteHistoryItem={(id) => setHistory(prev => prev.filter(h => h.id !== id))}
-            onSelectHistoryItem={(item) => {
-              setSourceText(item.sourceText);
-              setTranslatedText(item.translatedText);
-              setSourceLang(item.sourceLang);
-              setTargetLang(item.targetLang);
-              setActiveTab('translate');
-            }}
-            onToggleStar={handleToggleHistoryStar}
-          />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setActiveTab('translate')}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all"
+              >
+                <span>←</span>
+                <span>Back to Translate</span>
+              </button>
+            </div>
+
+            <History
+              history={history}
+              onClearHistory={() => setHistory([])}
+              onDeleteHistoryItem={(id) => setHistory(prev => prev.filter(h => h.id !== id))}
+              onSelectHistoryItem={(item) => {
+                setSourceText(item.sourceText);
+                setTranslatedText(item.translatedText);
+                setSourceLang(item.sourceLang);
+                setTargetLang(item.targetLang);
+                setActiveTab('translate');
+              }}
+              onToggleStar={handleToggleHistoryStar}
+              initialStarredOnly={historyStarredOnly}
+            />
+          </div>
         )}
 
       </main>

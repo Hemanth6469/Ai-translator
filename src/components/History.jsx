@@ -7,10 +7,11 @@ export default function History({
   onClearHistory,
   onDeleteHistoryItem,
   onSelectHistoryItem,
-  onToggleStar
+  onToggleStar,
+  initialStarredOnly = false
 }) {
   const [search, setSearch] = useState('');
-  const [starredOnly, setStarredOnly] = useState(false);
+  const [starredOnly, setStarredOnly] = useState(initialStarredOnly);
   const [copiedId, setCopiedId] = useState(null);
 
   // Filter history
