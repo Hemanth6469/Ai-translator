@@ -105,7 +105,7 @@ export default function App() {
     } finally {
       setIsTranslating(false);
     }
-  }, [sourceText, sourceLang, targetLang, tone, domain, apiKey]);
+  }, [sourceText, sourceLang, targetLang, apiKey]);
 
   // Auto-translate debounce
   const timerRef = useRef(null);
