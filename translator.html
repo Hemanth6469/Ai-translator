@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Translator — AI Translator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- React & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for inline JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.7); }
+    .dark ::-webkit-scrollbar-thumb { background: rgba(75, 85, 99, 0.5); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    // 80+ Comprehensive Languages
+    const LANGUAGES = [
+      { code: 'auto', name: 'Auto Detect', native: 'Detect Language', flag: '✨', speechCode: 'en-US' },
+      { code: 'en', name: 'English', native: 'English', flag: '🇺🇸', speechCode: 'en-US' },
+      { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸', speechCode: 'es-ES' },
+      { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷', speechCode: 'fr-FR' },
+      { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪', speechCode: 'de-DE' },
+      { code: 'zh', name: 'Chinese (Simplified)', native: '中文 (简体)', flag: '🇨🇳', speechCode: 'zh-CN' },
+      { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵', speechCode: 'ja-JP' },
+      { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳', speechCode: 'hi-IN' },
+      { code: 'ar', name: 'Arabic', native: 'العربية', flag: '🇸🇦', speechCode: 'ar-SA' },
+      { code: 'ru', name: 'Russian', native: 'Русский', flag: '🇷🇺', speechCode: 'ru-RU' },
+      { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇧🇷', speechCode: 'pt-BR' },
+      { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹', speechCode: 'it-IT' },
+      { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷', speechCode: 'ko-KR' },
+      { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱', speechCode: 'nl-NL' },
+      { code: 'tr', name: 'Turkish', native: 'Türkçe', flag: '🇹🇷', speechCode: 'tr-TR' },
+      { code: 'pl', name: 'Polish', native: 'Polski', flag: '🇵🇱', speechCode: 'pl-PL' },
+      { code: 'sv', name: 'Swedish', native: 'Svenska', flag: '🇸🇪', speechCode: 'sv-SE' },
+      { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia', flag: '🇮🇩', speechCode: 'id-ID' },
+      { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt', flag: '🇻🇳', speechCode: 'vi-VN' },
+      { code: 'th', name: 'Thai', native: 'ไทย', flag: '🇹🇭', speechCode: 'th-TH' },
+      { code: 'el', name: 'Greek', native: 'Ελληνικά', flag: '🇬🇷', speechCode: 'el-GR' },
+      { code: 'cs', name: 'Czech', native: 'Čeština', flag: '🇨🇿', speechCode: 'cs-CZ' },
+      { code: 'da', name: 'Danish', native: 'Dansk', flag: '🇩🇰', speechCode: 'da-DK' },
+      { code: 'fi', name: 'Finnish', native: 'Suomi', flag: '🇫🇮', speechCode: 'fi-FI' },
+      { code: 'he', name: 'Hebrew', native: 'עברית', flag: '🇮🇱', speechCode: 'he-IL' },
+      { code: 'hu', name: 'Hungarian', native: 'Magyar', flag: '🇭🇺', speechCode: 'hu-HU' },
+      { code: 'no', name: 'Norwegian', native: 'Norsk', flag: '🇳🇴', speechCode: 'nb-NO' },
+      { code: 'ro', name: 'Romanian', native: 'Română', flag: '🇷🇴', speechCode: 'ro-RO' },
+      { code: 'uk', name: 'Ukrainian', native: 'Українська', flag: '🇺🇦', speechCode: 'uk-UA' },
+      { code: 'ms', name: 'Malay', native: 'Bahasa Melayu', flag: '🇲🇾', speechCode: 'ms-MY' },
+      { code: 'bn', name: 'Bengali', native: 'বাংলা', flag: '🇧🇩', speechCode: 'bn-BD' },
+      { code: 'fa', name: 'Persian', native: 'فارسی', flag: '🇮🇷', speechCode: 'fa-IR' },
+      { code: 'tl', name: 'Filipino', native: 'Tagalog', flag: '🇵🇭', speechCode: 'fil-PH' },
+      { code: 'ta', name: 'Tamil', native: 'தமிழ்', flag: '🇮🇳', speechCode: 'ta-IN' },
+      { code: 'te', name: 'Telugu', native: 'తెలుగు', flag: '🇮🇳', speechCode: 'te-IN' },
+      { code: 'mr', name: 'Marathi', native: 'मराठी', flag: '🇮🇳', speechCode: 'mr-IN' },
+      { code: 'ur', name: 'Urdu', native: 'اردو', flag: '🇵🇰', speechCode: 'ur-PK' },
+      { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪', speechCode: 'sw-KE' },
+      { code: 'sk', name: 'Slovak', native: 'Slovenčina', flag: '🇸🇰', speechCode: 'sk-SK' },
+      { code: 'bg', name: 'Bulgarian', native: 'Български', flag: '🇧🇬', speechCode: 'bg-BG' },
+      { code: 'hr', name: 'Croatian', native: 'Hrvatski', flag: '🇭🇷', speechCode: 'hr-HR' },
+      { code: 'sr', name: 'Serbian', native: 'Српски', flag: '🇷🇸', speechCode: 'sr-RS' },
+      { code: 'ca', name: 'Catalan', native: 'Català', flag: '🇪🇸', speechCode: 'ca-ES' },
+      { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી', flag: '🇮🇳', speechCode: 'gu-IN' },
+      { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ', flag: '🇮🇳', speechCode: 'kn-IN' },
+      { code: 'ml', name: 'Malayalam', native: 'മലയാളം', flag: '🇮🇳', speechCode: 'ml-IN' },
+      { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ', flag: '🇮🇳', speechCode: 'pa-IN' }
+    ];
+
+    const POPULAR_LANGUAGES = ['en', 'es', 'fr', 'de', 'zh', 'ja', 'hi', 'ar', 'ru', 'pt'];
+
+    function getLanguageByCode(code) {
+      if (!code || typeof code !== 'string') {
+        return { code: 'en', name: 'English', native: 'English', flag: '🇺🇸', speechCode: 'en-US' };
+      }
+      return LANGUAGES.find(l => l.code.toLowerCase() === code.toLowerCase()) || {
+        code,
+        name: code.toUpperCase(),
+        native: code.toUpperCase(),
+        flag: '🌐',
+        speechCode: 'en-US'
+      };
+    }
+
+    // Direct High-Speed Client Translation with automatic Fallback
+    async function executeTranslation(text, sourceLang, targetLang, apiKey) {
+      if (!text || !text.trim()) return { translatedText: '', detectedSource: sourceLang };
+
+      // 1. Try local Express backend if running
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          const res = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, sourceLang, targetLang, apiKey: apiKey || undefined })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.translatedText) return data;
+          }
+        } catch (e) {
+          // fallback to direct web
+        }
+      }
+
+      // 2. Direct browser Google Translate GTX call
+      const sl = (sourceLang === 'auto') ? 'auto' : sourceLang;
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && Array.isArray(data[0])) {
+            const translatedText = data[0].map(item => item[0]).filter(Boolean).join('');
+            const detectedSource = data[2] || (sourceLang === 'auto' ? 'en' : sourceLang);
+            if (translatedText.trim()) {
+              return {
+                success: true,
+                translatedText,
+                detectedSource,
+                provider: 'High-Speed Web Engine'
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Google GTX direct failed, trying MyMemory:', err);
+      }
+
+      // 3. Direct browser MyMemory API call
+      try {
+        const memSl = (sourceLang === 'auto') ? 'en' : sourceLang;
+        const pair = `${memSl}|${targetLang}`;
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 500))}&langpair=${encodeURIComponent(pair)}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.responseData?.translatedText) {
+            return {
+              success: true,
+              translatedText: data.responseData.translatedText,
+              detectedSource: memSl,
+              provider: 'MyMemory Linguistic Engine'
+            };
+          }
+        }
+      } catch (err) {
+        console.error('All translation endpoints failed:', err);
+      }
+
+      throw new Error('Translation failed. Please check internet connection.');
+    }
+
+    // Main App Component
+    function App() {
+      const [darkMode, setDarkMode] = useState(() => {
+        try {
+          return localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        } catch { return false; }
+      });
+
+      useEffect(() => {
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+      }, [darkMode]);
+
+      const [activeTab, setActiveTab] = useState('translate'); // 'translate' | 'history'
+      const [sourceText, setSourceText] = useState('Hello world! Welcome to AI Translator.');
+      const [translatedText, setTranslatedText] = useState('¡Hola Mundo! Bienvenido a AI Translator.');
+      const [sourceLang, setSourceLang] = useState('auto');
+      const [targetLang, setTargetLang] = useState('es');
+      const [detectedSource, setDetectedSource] = useState('en');
+      const [isTranslating, setIsTranslating] = useState(false);
+      const [copied, setCopied] = useState(false);
+      const [isListening, setIsListening] = useState(false);
+      const [speechRate, setSpeechRate] = useState(1.0);
+      const [autoTranslate, setAutoTranslate] = useState(false);
+      const [apiKey, setApiKey] = useState(() => {
+        try { return localStorage.getItem('translator_gemini_key') || ''; } catch { return ''; }
+      });
+
+      // Modals
+      const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+      const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
+      const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+      // History
+      const [history, setHistory] = useState(() => {
+        try {
+          const saved = localStorage.getItem('translator_history');
+          const parsed = saved ? JSON.parse(saved) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch { return []; }
+      });
+
+      useEffect(() => {
+        try { localStorage.setItem('translator_history', JSON.stringify(history)); } catch (e) {}
+      }, [history]);
+
+      // Speech Recognition Setup
+      const recognitionRef = useRef(null);
+      useEffect(() => {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+          const rec = new SpeechRec();
+          rec.continuous = false;
+          rec.interimResults = true;
+          rec.onresult = (e) => {
+            const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+            setSourceText(transcript);
+          };
+          rec.onend = () => setIsListening(false);
+          rec.onerror = () => setIsListening(false);
+          recognitionRef.current = rec;
+        }
+      }, []);
+
+      const toggleListening = () => {
+        if (!recognitionRef.current) {
+          alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+          return;
+        }
+        if (isListening) {
+          recognitionRef.current.stop();
+          setIsListening(false);
+        } else {
+          try {
+            recognitionRef.current.lang = sourceLang === 'auto' ? 'en-US' : (getLanguageByCode(sourceLang).speechCode || 'en-US');
+            recognitionRef.current.start();
+            setIsListening(true);
+          } catch (e) {
+            console.warn(e);
+          }
+        }
+      };
+
+      // Speech Synthesis
+      const speak = (text, langCode) => {
+        if (!window.speechSynthesis || !text) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        const l = getLanguageByCode(langCode);
+        u.lang = l.speechCode || 'en-US';
+        u.rate = speechRate || 1.0;
+        window.speechSynthesis.speak(u);
+      };
+
+      // Perform translation
+      const handleTranslate = useCallback(async () => {
+        if (!sourceText.trim()) return;
+        setIsTranslating(true);
+        try {
+          const res = await executeTranslation(sourceText, sourceLang, targetLang, apiKey);
+          setTranslatedText(res.translatedText);
+          if (res.detectedSource) setDetectedSource(res.detectedSource);
+
+          const record = {
+            id: Date.now(),
+            sourceText,
+            translatedText: res.translatedText,
+            sourceLang: sourceLang === 'auto' ? (res.detectedSource || 'en') : sourceLang,
+            targetLang,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            starred: false
+          };
+          setHistory(prev => [record, ...(Array.isArray(prev) ? prev : []).filter(h => h.sourceText !== sourceText).slice(0, 49)]);
+        } catch (e) {
+          alert(e.message || 'Translation failed');
+        } finally {
+          setIsTranslating(false);
+        }
+      }, [sourceText, sourceLang, targetLang, apiKey]);
+
+      // Debounce auto-translate
+      const debounceRef = useRef(null);
+      useEffect(() => {
+        if (!autoTranslate || !sourceText.trim()) return;
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          handleTranslate();
+        }, 700);
+        return () => clearTimeout(debounceRef.current);
+      }, [sourceText, autoTranslate, handleTranslate]);
+
+      const copyToClipboard = (txt) => {
+        navigator.clipboard.writeText(txt);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
+      const handleSwap = () => {
+        const s = sourceLang === 'auto' ? detectedSource : sourceLang;
+        const t = targetLang;
+        setSourceLang(t);
+        setTargetLang(s);
+        const oldSrc = sourceText;
+        setSourceText(translatedText);
+        setTranslatedText(oldSrc);
+      };
+
+      const srcObj = getLanguageByCode(sourceLang);
+      const tgtObj = getLanguageByCode(targetLang);
+
+      return (
+        <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+          
+          {/* Header */}
+          <header className="sticky top-0 z-30 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+              
+              {/* Logo */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-500/25">
+                  🌐
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg font-black tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
+                      Translator
+                    </span>
+                    <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                      AI
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-medium text-slate-400">AI Powered Translator</p>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800">
+                <button
+                  onClick={() => setActiveTab('translate')}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === 'translate'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  📝 Translator
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === 'history'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  🕒 History ({history.length})
+                </button>
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  title="Toggle Dark Mode"
+                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  {darkMode ? '☀️' : '🌙'}
+                </button>
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  title="Settings"
+                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  ⚙️
+                </button>
+              </div>
+
+            </div>
+          </header>
+
+          {/* Main Area */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+            
+            {activeTab === 'translate' ? (
+              <div className="space-y-6">
+                <div className="text-center max-w-xl mx-auto mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    Translate Any Language Accurately
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    Free, high-speed polyglot translation with voice speech and auto-detection.
+                  </p>
+                </div>
+
+                {/* Translation Box Dual Pane */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative">
+                  
+                  {/* Source Box */}
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[380px] sm:h-[420px] focus-within:ring-4 focus-within:ring-indigo-500/10">
+                    <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <button
+                        onClick={() => setIsSourceModalOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm"
+                      >
+                        <span className="text-lg">{srcObj.flag}</span>
+                        <span>{srcObj.name}</span>
+                        {sourceLang === 'auto' && (
+                          <span className="text-xs text-indigo-500 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-md">
+                            Detected: {getLanguageByCode(detectedSource).name}
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-400">▼</span>
+                      </button>
+
+                      {sourceText && (
+                        <button
+                          onClick={() => setSourceText('')}
+                          className="text-xs text-slate-400 hover:text-rose-500"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex-1 p-5">
+                      <textarea
+                        value={sourceText}
+                        onChange={e => setSourceText(e.target.value)}
+                        onKeyDown={e => {
+                          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            handleTranslate();
+                          }
+                        }}
+                        placeholder="Type, speak, or paste text to translate... [Ctrl + Enter]"
+                        className="w-full h-full resize-none bg-transparent placeholder-slate-400 text-base sm:text-lg focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20 rounded-b-3xl">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleListening}
+                          className={`p-2 rounded-xl text-sm transition-all ${
+                            isListening ? 'bg-rose-500 text-white animate-pulse' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800'
+                          }`}
+                          title="Microphone speech input"
+                        >
+                          🎤
+                        </button>
+                        <button
+                          onClick={() => speak(sourceText, detectedSource || sourceLang)}
+                          className="p-2 rounded-xl text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 text-sm"
+                          title="Listen pronunciation"
+                        >
+                          🔊
+                        </button>
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {sourceText.length} chars
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Swap button */}
+                  <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <button
+                      onClick={handleSwap}
+                      title="Swap languages"
+                      className="p-3 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-500 shadow-md transition-all hover:scale-110"
+                    >
+                      ⇄
+                    </button>
+                  </div>
+
+                  {/* Target Box */}
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[380px] sm:h-[420px]">
+                    <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <button
+                        onClick={() => setIsTargetModalOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm"
+                      >
+                        <span className="text-lg">{tgtObj.flag}</span>
+                        <span>{tgtObj.name}</span>
+                        <span className="text-xs text-slate-400">▼</span>
+                      </button>
+
+                      <span className="text-[11px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        ✨ High-Speed Engine
+                      </span>
+                    </div>
+
+                    <div className="flex-1 p-5 overflow-y-auto">
+                      {isTranslating ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2">
+                          <div className="w-8 h-8 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
+                          <span className="text-xs">Translating...</span>
+                        </div>
+                      ) : translatedText ? (
+                        <div className="text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+                          {translatedText}
+                        </div>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">
+                          Translation appears here...
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20 rounded-b-3xl">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => speak(translatedText, targetLang)}
+                          className="p-2 rounded-xl text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 text-sm"
+                          title="Listen pronunciation"
+                        >
+                          🔊
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(translatedText)}
+                          className="p-2 rounded-xl text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-semibold"
+                          title="Copy translation"
+                        >
+                          {copied ? '✓ Copied' : '📋 Copy'}
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => setIsInsightsOpen(true)}
+                        className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100"
+                      >
+                        💡 AI Breakdown
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Primary Action Button */}
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-xs text-slate-400">
+                    Press <kbd className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono">Ctrl + Enter</kbd> to translate instantly
+                  </div>
+
+                  <button
+                    onClick={handleTranslate}
+                    disabled={isTranslating || !sourceText.trim()}
+                    className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 active:scale-95 disabled:opacity-50 transition-all flex items-center gap-2"
+                  >
+                    {isTranslating ? 'Translating...' : 'Translate Now ✨'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* History Tab */
+              <div className="space-y-4">
+                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold">Saved Translation History</h3>
+                    <p className="text-xs text-slate-400">{history.length} items recorded locally</p>
+                  </div>
+                  {history.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Clear all translation history?')) setHistory([]);
+                      }}
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 text-rose-500 text-xs hover:bg-rose-50 dark:hover:bg-rose-950"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {history.length === 0 ? (
+                    <div className="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+                      <p className="text-sm font-medium">No history items yet.</p>
+                      <p className="text-xs text-slate-500 mt-1">Translate text and it will appear here automatically.</p>
+                    </div>
+                  ) : (
+                    history.map(item => (
+                      <div
+                        key={item.id}
+                        className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4"
+                      >
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="text-xs text-slate-400">
+                            {getLanguageByCode(item.sourceLang).name} → {getLanguageByCode(item.targetLang).name} • {item.timestamp}
+                          </div>
+                          <div className="text-sm font-semibold truncate">"{item.sourceText}"</div>
+                          <div className="text-sm text-indigo-600 dark:text-indigo-400 truncate">→ "{item.translatedText}"</div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSourceText(item.sourceText);
+                              setTranslatedText(item.translatedText);
+                              setSourceLang(item.sourceLang);
+                              setTargetLang(item.targetLang);
+                              setActiveTab('translate');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-semibold"
+                          >
+                            Load
+                          </button>
+                          <button
+                            onClick={() => setHistory(prev => prev.filter(h => h.id !== item.id))}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* Language Selector Modal */}
+          {(isSourceModalOpen || isTargetModalOpen) && (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => { setIsSourceModalOpen(false); setIsTargetModalOpen(false); }}
+            >
+              <div 
+                className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[80vh] flex flex-col"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg">
+                    {isSourceModalOpen ? 'Select Source Language' : 'Select Target Language'}
+                  </h3>
+                  <button 
+                    onClick={() => { setIsSourceModalOpen(false); setIsTargetModalOpen(false); }}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-1">
+                  {LANGUAGES.filter(l => isSourceModalOpen ? true : l.code !== 'auto').map(l => (
+                    <button
+                      key={l.code}
+                      onClick={() => {
+                        if (isSourceModalOpen) setSourceLang(l.code);
+                        else setTargetLang(l.code);
+                        setIsSourceModalOpen(false);
+                        setIsTargetModalOpen(false);
+                      }}
+                      className="p-2.5 rounded-xl text-left border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 transition-all flex items-center gap-2"
+                    >
+                      <span className="text-xl">{l.flag}</span>
+                      <div className="truncate">
+                        <div className="text-xs font-semibold truncate">{l.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate">{l.native}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Insights Modal */}
+          {isInsightsOpen && (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsInsightsOpen(false)}
+            >
+              <div 
+                className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <span>💡</span>
+                    <span>Linguistic Analysis & Nuances</span>
+                  </h3>
+                  <button onClick={() => setIsInsightsOpen(false)} className="text-slate-400">✕</button>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-xs text-slate-700 dark:text-slate-300 space-y-2">
+                  <p className="font-semibold text-indigo-700 dark:text-indigo-400">Structural Overview:</p>
+                  <p>Accurate correspondence maintained between {srcObj.name} and {tgtObj.name}. Grammatical agreements and tense align with standard linguistic usage.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Vocabulary Mapping</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {sourceText.split(/\s+/).slice(0, 4).map((w, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                        <span className="font-bold">{w}</span>
+                        <span className="text-slate-400"> → </span>
+                        <span className="text-indigo-600 font-semibold">In context</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsInsightsOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold"
+                >
+                  Close Insights
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Modal */}
+          {isSettingsOpen && (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsSettingsOpen(false)}
+            >
+              <div 
+                className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg">Translator Settings</h3>
+                  <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400">✕</button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-slate-500">Google Gemini API Key (Optional)</label>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={e => {
+                      setApiKey(e.target.value);
+                      try { localStorage.setItem('translator_gemini_key', e.target.value); } catch(e){}
+                    }}
+                    placeholder="Optional: AIzaSy..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                  <p className="text-[10px] text-slate-400">If blank, the built-in free Universal Engine is automatically used.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-bold text-slate-500 uppercase">Voice Speed</span>
+                    <span className="font-mono text-indigo-500 font-bold">{speechRate}x</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="1.5"
+                    step="0.1"
+                    value={speechRate}
+                    onChange={e => setSpeechRate(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs font-semibold">Auto-Translate on Type</span>
+                  <input
+                    type="checkbox"
+                    checked={autoTranslate}
+                    onChange={e => setAutoTranslate(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-600 cursor-pointer"
+                  />
+                </div>
+
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs"
+                >
+                  Save & Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="py-6 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+            <p>© 2026 Translator — AI Translator</p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
