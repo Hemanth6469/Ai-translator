@@ -83,7 +83,16 @@ export const LANGUAGES = [
 ];
 
 export function getLanguageByCode(code) {
-  return LANGUAGES.find(l => l.code === code) || {
+  if (!code || typeof code !== 'string') {
+    return {
+      code: 'en',
+      name: 'English',
+      native: 'English',
+      flag: '🇺🇸',
+      speechCode: 'en-US'
+    };
+  }
+  return LANGUAGES.find(l => l.code.toLowerCase() === code.toLowerCase()) || {
     code,
     name: code.toUpperCase(),
     native: code.toUpperCase(),
