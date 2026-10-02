@@ -19,7 +19,7 @@ export default function SettingsModal({
 
   const handleSave = () => {
     setApiKey(keyInput.trim());
-    localStorage.setItem('omnilingo_gemini_key', keyInput.trim());
+    localStorage.setItem('translator_gemini_key', keyInput.trim());
     setSavedBadge(true);
     setTimeout(() => {
       setSavedBadge(false);
@@ -87,7 +87,7 @@ export default function SettingsModal({
                 <span>Built-in Free Engine Active by Default</span>
               </div>
               <p>
-                If no API key is set, OmniLingo AI uses the built-in free Universal translation engine. Adding a free Gemini API key unlocks deep context awareness, idiomatic nuances, and detailed linguistic breakdowns.
+                If no API key is set, Translator uses the built-in free Universal translation engine. Adding a free Gemini API key unlocks deep context awareness, idiomatic nuances, and detailed linguistic breakdowns.
               </p>
             </div>
           </div>

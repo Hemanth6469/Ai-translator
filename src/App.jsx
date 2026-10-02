@@ -45,7 +45,7 @@ export default function App() {
   const [provider, setProvider] = useState('Universal High-Speed Engine');
 
   // Preferences & API Key
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('omnilingo_gemini_key') || '');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('translator_gemini_key') || localStorage.getItem('omnilingo_gemini_key') || '');
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
 
@@ -62,7 +62,7 @@ export default function App() {
   // History & Vocabulary Persistence
   const [history, setHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem('omnilingo_history');
+      const saved = localStorage.getItem('translator_history') || localStorage.getItem('omnilingo_history');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -71,7 +71,7 @@ export default function App() {
 
   const [vocabulary, setVocabulary] = useState(() => {
     try {
-      const saved = localStorage.getItem('omnilingo_vocab');
+      const saved = localStorage.getItem('translator_vocab') || localStorage.getItem('omnilingo_vocab');
       return saved ? JSON.parse(saved) : [
         { word: 'futuro', meaning: 'future', pos: 'noun', note: 'Essential vocabulary term' },
         { word: 'sueños', meaning: 'dreams', pos: 'noun', note: 'Plural form of sueño' }
@@ -82,11 +82,11 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('omnilingo_history', JSON.stringify(history));
+    localStorage.setItem('translator_history', JSON.stringify(history));
   }, [history]);
 
   useEffect(() => {
-    localStorage.setItem('omnilingo_vocab', JSON.stringify(vocabulary));
+    localStorage.setItem('translator_vocab', JSON.stringify(vocabulary));
   }, [vocabulary]);
 
   // Execute translation
@@ -374,7 +374,7 @@ export default function App() {
       {/* Footer */}
       <footer className="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© 2026 OmniLingo AI — Next-Gen Polyglot Linguistic Platform</p>
+          <p>© 2026 Translator — AI Translator Website</p>
           <div className="flex items-center gap-4 text-slate-400">
             <span>Web Speech API</span>
             <span>•</span>

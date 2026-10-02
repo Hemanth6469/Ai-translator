@@ -1,7 +1,7 @@
 {
-  "name": "ai-translator-pro",
+  "name": "translator",
   "version": "1.0.0",
-  "description": "Next-Gen AI Translation Platform with Multi-Model Support, Voice, Image OCR, Document Translation, and Linguistic Breakdown",
+  "description": "AI Translator Website with Multi-Model Support, Voice, Image OCR, Document Translation, and Linguistic Breakdown",
   "main": "server.js",
   "type": "module",
   "scripts": {

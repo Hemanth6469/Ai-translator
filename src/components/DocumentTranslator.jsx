@@ -81,7 +81,7 @@ export default function DocumentTranslator({ sourceLang, targetLang, tone, domai
           setError(clientErr.message || 'Failed to parse and translate document');
         }
       } else {
-        setError(`Could not process .${ext} file. Make sure the OmniLingo backend server is running.`);
+        setError(`Could not process .${ext} file. Make sure the Translator backend server is running.`);
       }
     } finally {
       setIsTranslating(false);

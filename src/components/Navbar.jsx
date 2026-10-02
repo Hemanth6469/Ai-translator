@@ -33,14 +33,14 @@ export default function Navbar({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-black tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
-                OmniLingo
+                Translator
               </span>
               <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
                 AI
               </span>
             </div>
             <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 hidden sm:block">
-              Next-Gen Linguistic Intelligence
+              AI Powered Translator
             </p>
           </div>
         </div>

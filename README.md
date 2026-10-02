@@ -1,6 +1,6 @@
-# 🌐 OmniLingo AI — Next-Gen Polyglot AI Translator
+# 🌐 AI Translator — Next-Gen Polyglot Translator
 
-OmniLingo AI is a state-of-the-art AI-powered translation web application built with **React 18**, **Vite**, **Tailwind CSS**, and **Express.js**.
+**AI Translator** is a state-of-the-art AI-powered translation web application built with **React 18**, **Vite**, **Tailwind CSS**, and **Express.js**.
 
 It provides natural, context-aware translations across 80+ world languages with tone and domain customization, real-time voice conversation, document translation, in-browser OCR image translation, multi-tone style comparison, and linguistic breakdown.
 
@@ -78,7 +78,7 @@ Open **`http://localhost:5001`** in your browser.
 
 ## 🔑 AI Engine & API Configuration
 
-OmniLingo AI is engineered with dual-engine flexibility:
+AI Translator is engineered with dual-engine flexibility:
 
 - **Built-in Universal Engine (Default)**: Works immediately out-of-the-box with **zero API keys required**. Free, fast, and covers 80+ languages.
 - **Google Gemini 1.5 AI (Optional)**:

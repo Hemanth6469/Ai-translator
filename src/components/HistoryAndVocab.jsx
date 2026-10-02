@@ -46,7 +46,7 @@ export default function HistoryAndVocab({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `omnilingo-history-${Date.now()}.json`;
+    a.download = `translator-history-${Date.now()}.json`;
     a.click();
   };
 
@@ -56,7 +56,7 @@ export default function HistoryAndVocab({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `omnilingo-vocab-${Date.now()}.csv`);
+    link.setAttribute("download", `translator-vocab-${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

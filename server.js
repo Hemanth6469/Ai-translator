@@ -359,11 +359,11 @@ app.get('*', (req, res, next) => {
   const indexHtml = path.join(distPath, 'index.html');
   res.sendFile(indexHtml, (err) => {
     if (err) {
-      res.status(200).send('OmniLingo AI API is running. Build the frontend or run in dev mode.');
+      res.status(200).send('AI Translator API is running. Build the frontend or run in dev mode.');
     }
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🌐 OmniLingo AI Server running on http://localhost:${PORT}`);
+  console.log(`🌐 AI Translator Server running on http://localhost:${PORT}`);
 });
