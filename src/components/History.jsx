@@ -130,11 +130,6 @@ export default function History({
                       <span>{tgtObj.flag}</span>
                       <span>{tgtObj.name}</span>
                     </span>
-                    {item.tone && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
-                        {item.tone}
-                      </span>
-                    )}
                     <span className="text-[10px] text-slate-400">{item.timestamp}</span>
                   </div>
 

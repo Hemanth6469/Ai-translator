@@ -75,7 +75,7 @@ async function freeTranslateFallback(text, sourceLang, targetLang) {
 }
 
 // Helper: AI Translation via Gemini
-async function geminiTranslate(text, sourceLang, targetLang, tone = 'standard', domain = 'general', apiKey) {
+async function geminiTranslate(text, sourceLang, targetLang, apiKey) {
   const activeKey = apiKey || process.env.GEMINI_API_KEY;
   if (!activeKey) {
     throw new Error('No Gemini API key provided');
@@ -84,34 +84,11 @@ async function geminiTranslate(text, sourceLang, targetLang, tone = 'standard', 
   const genAI = new GoogleGenerativeAI(activeKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-  const toneGuidelines = {
-    standard: 'Accurate, natural, and balanced.',
-    casual: 'Conversational, colloquial, relaxed, and everyday phrasing.',
-    formal: 'Polite, respectful, elevated vocabulary, and grammatically impeccable.',
-    professional: 'Crisp, corporate, courteous, and business-ready.',
-    poetic: 'Expressive, lyrical, metaphor-rich, and emotionally resonant.',
-    academic: 'Scholarly, precise, technical terminology, and rigorous syntax.',
-    eli5: 'Simple words, easy-to-understand, friendly, and accessible to a 5-year-old.',
-    humorous: 'Witty, engaging, playful, while retaining original core intent.'
-  };
-
-  const domainGuidelines = {
-    general: 'Standard everyday communication.',
-    tech: 'Software, IT, engineering, preserving code snippets, variables, and technical terms.',
-    business: 'Finance, enterprise, marketing, commerce, and negotiations.',
-    medical: 'Healthcare, anatomy, pharmacology, maintaining clinical precision.',
-    legal: 'Law, contracts, compliance, precise statutory language.',
-    travel: 'Tourism, navigation, dining, local customs, and hospitality.'
-  };
-
   const prompt = `You are a world-class AI Master Translator and Polyglot.
-Translate the following text from ${sourceLang === 'auto' ? 'its automatically detected language' : sourceLang} to ${targetLang}.
-
-Style & Tone: ${tone} (${toneGuidelines[tone] || toneGuidelines.standard})
-Domain Context: ${domain} (${domainGuidelines[domain] || domainGuidelines.general})
+Translate the following text accurately and naturally from ${sourceLang === 'auto' ? 'its automatically detected language' : sourceLang} to ${targetLang}.
 
 Rules:
-1. Translate accurately while adapting naturally to cultural context and the requested tone.
+1. Translate accurately preserving original meaning, context, and nuance.
 2. If code, formatting, or placeholders (like {name}, {{var}}, [link](url)) are present, preserve them exactly.
 3. Return ONLY the translation. Do NOT include markdown fences, introductory greetings, or meta commentary.
 
@@ -141,7 +118,7 @@ app.get('/api/health', (req, res) => {
 // 2. Primary Translation Endpoint
 app.post('/api/translate', async (req, res) => {
   try {
-    const { text, sourceLang = 'auto', targetLang = 'es', tone = 'standard', domain = 'general', apiKey } = req.body;
+    const { text, sourceLang = 'auto', targetLang = 'es', apiKey } = req.body;
 
     if (!text || typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ error: 'Text is required for translation' });
@@ -153,12 +130,10 @@ app.post('/api/translate', async (req, res) => {
     // If Gemini key is available
     if (effectiveKey) {
       try {
-        const result = await geminiTranslate(trimmed, sourceLang, targetLang, tone, domain, effectiveKey);
+        const result = await geminiTranslate(trimmed, sourceLang, targetLang, effectiveKey);
         return res.json({
           success: true,
-          ...result,
-          tone,
-          domain
+          ...result
         });
       } catch (geminiError) {
         console.warn('Gemini translation encountered an error, falling back to free engine:', geminiError.message);
@@ -169,9 +144,7 @@ app.post('/api/translate', async (req, res) => {
     const result = await freeTranslateFallback(trimmed, sourceLang, targetLang);
     return res.json({
       success: true,
-      ...result,
-      tone,
-      domain
+      ...result
     });
   } catch (error) {
     console.error('Translation error:', error);

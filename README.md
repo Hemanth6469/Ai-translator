@@ -9,7 +9,6 @@
 1. **📝 Multi-Language AI Translator**:
    - Supports 80+ world languages with auto-detection.
    - Dual-pane layout with instant swap, copy, clear, and download.
-   - **Tone & Context Adaptation**: Standard, Casual, Formal, Professional, Poetic, Academic, Simple (ELI5), and Witty.
    - **Speech & Pronunciation (TTS & STT)**: Voice input via microphone and natural pronunciation playback with adjustable speed.
    - **AI Linguistic Insights**: Explains vocabulary meanings, grammar rules, cultural idioms, and alternative phrasings.
    - Keyboard shortcut: Press `Ctrl + Enter` to translate immediately.
@@ -80,8 +79,7 @@ translator/
 │   ├── App.jsx               # Master application layout & state
 │   ├── index.css             # Styling & custom utilities
 │   ├── data/
-│   │   ├── languages.js      # 80+ languages with flags & TTS codes
-│   │   └── tones.js          # Tone & domain definitions
+│   │   └── languages.js      # 80+ languages with flags & TTS codes
 │   ├── services/
 │   │   └── api.js            # Translation client with auto-fallbacks
 │   └── components/

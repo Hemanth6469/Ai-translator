@@ -5,7 +5,6 @@ import {
   ChevronDown, Flame, BookMarked, Globe, Loader2
 } from 'lucide-react';
 import { getLanguageByCode } from '../data/languages';
-import { TONES, DOMAINS } from '../data/tones';
 
 export default function TranslationBox({
   sourceText,
@@ -16,10 +15,6 @@ export default function TranslationBox({
   setSourceLang,
   targetLang,
   setTargetLang,
-  tone,
-  setTone,
-  domain,
-  setDomain,
   onTranslate,
   isTranslating,
   onOpenSourceModal,
@@ -170,45 +165,6 @@ export default function TranslationBox({
   return (
     <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-4 z-40 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl overflow-y-auto' : 'w-full'}`}>
       
-      {/* Tone and Domain Selector Pills */}
-      <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        {/* Tones */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1.5 sm:pb-0 scrollbar-none">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1 shrink-0">Tone:</span>
-          {TONES.map(t => {
-            const isSelected = tone === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTone(t.id)}
-                title={t.desc}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                    : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-800'
-                }`}
-              >
-                {t.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Domain Context */}
-        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">Context:</span>
-          <select
-            value={domain}
-            onChange={e => setDomain(e.target.value)}
-            className="text-xs font-medium px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {DOMAINS.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {/* Main Dual Box Container */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative">
         

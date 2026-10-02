@@ -2,7 +2,7 @@
 
 const BACKEND_BASE = '/api';
 
-export async function translateText({ text, sourceLang = 'auto', targetLang = 'es', tone = 'standard', domain = 'general', apiKey = '' }) {
+export async function translateText({ text, sourceLang = 'auto', targetLang = 'es', apiKey = '' }) {
   if (!text || !text.trim()) {
     return { translatedText: '', detectedSource: sourceLang };
   }
@@ -16,8 +16,6 @@ export async function translateText({ text, sourceLang = 'auto', targetLang = 'e
         text,
         sourceLang,
         targetLang,
-        tone,
-        domain,
         apiKey: apiKey || undefined
       })
     });
@@ -47,8 +45,6 @@ export async function translateText({ text, sourceLang = 'auto', targetLang = 'e
           success: true,
           translatedText,
           detectedSource,
-          tone,
-          domain,
           provider: 'High-Speed Web Engine (Direct)'
         };
       }
@@ -70,8 +66,6 @@ export async function translateText({ text, sourceLang = 'auto', targetLang = 'e
           success: true,
           translatedText: data.responseData.translatedText,
           detectedSource: sl,
-          tone,
-          domain,
           provider: 'MyMemory Linguistic Engine (Direct)'
         };
       }

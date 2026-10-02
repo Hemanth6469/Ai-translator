@@ -34,8 +34,6 @@ export default function App() {
   const [translatedText, setTranslatedText] = useState('El futuro pertenece a quienes creen en la belleza de sus sueños.');
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLang, setTargetLang] = useState('es');
-  const [tone, setTone] = useState('standard');
-  const [domain, setDomain] = useState('general');
   const [isTranslating, setIsTranslating] = useState(false);
   const [detectedSource, setDetectedSource] = useState('en');
   const [provider, setProvider] = useState('Universal High-Speed Engine');
@@ -79,8 +77,6 @@ export default function App() {
         text: sourceText,
         sourceLang,
         targetLang,
-        tone,
-        domain,
         apiKey
       });
 
@@ -99,8 +95,6 @@ export default function App() {
         translatedText: result.translatedText,
         sourceLang: sourceLang === 'auto' ? (result.detectedSource || 'en') : sourceLang,
         targetLang,
-        tone,
-        domain,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         starred: false
       };
@@ -219,10 +213,6 @@ export default function App() {
               setSourceLang={setSourceLang}
               targetLang={targetLang}
               setTargetLang={setTargetLang}
-              tone={tone}
-              setTone={setTone}
-              domain={domain}
-              setDomain={setDomain}
               onTranslate={handleTranslate}
               isTranslating={isTranslating}
               onOpenSourceModal={() => setIsSourceModalOpen(true)}
@@ -247,8 +237,6 @@ export default function App() {
               setTranslatedText(item.translatedText);
               setSourceLang(item.sourceLang);
               setTargetLang(item.targetLang);
-              if (item.tone) setTone(item.tone);
-              if (item.domain) setDomain(item.domain);
               setActiveTab('translate');
             }}
             onToggleStar={handleToggleHistoryStar}
